@@ -1,0 +1,379 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cellular Automata Lab</title>
+<style>
+:root{color-scheme:dark;--bg:#10131a;--panel:#191e29;--panel2:#202737;--line:#343e52;--text:#edf2fb;--muted:#aab5c8;--accent:#80d8c4;--danger:#ff8f8f;--pagetext:#edf2fb;--pagemuted:#aab5c8;--activebg:#15292a}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--pagetext);font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+header{padding:22px 24px 14px;border-bottom:1px solid var(--line)}h1{font-size:clamp(1.35rem,3vw,2rem);margin:0 0 4px}header p{margin:0;color:var(--pagemuted)}
+main{display:grid;grid-template-columns:minmax(300px,410px) minmax(0,1fr);gap:16px;padding:16px;max-width:1700px;margin:auto}.panel{background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:14px;padding:16px;min-width:0}
+h2{font-size:1.05rem;margin:0 0 12px}h3{font-size:.98rem;margin:0}.sub{color:var(--muted);font-size:.88rem}label{display:block;font-weight:650;margin:12px 0 5px}input,select,textarea,button{font:inherit}textarea,input,select{width:100%;background:#0f131b;color:var(--text);border:1px solid var(--line);border-radius:8px;padding:9px}textarea{min-height:230px;resize:vertical;font:13px/1.65 ui-monospace,SFMono-Regular,Consolas,monospace;tab-size:2}
+input[type=color]{padding:2px;height:38px;cursor:pointer}
+button{border:1px solid var(--line);border-radius:9px;padding:9px 12px;background:var(--panel2);color:var(--text);cursor:pointer;font-weight:650}button:hover{border-color:var(--accent)}button.primary,button.active{background:var(--accent);color:#10201c;border-color:var(--accent)}button:disabled{opacity:.45;cursor:not-allowed}.row{display:flex;gap:8px;align-items:center}.row>*{flex:1;min-width:0}.buttons{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}.buttons .wide{grid-column:span 3}
+.sec{margin-top:14px;padding:12px;border:1px solid var(--line);border-radius:12px;background:#141923;transition:background .15s,border-color .15s}.sec.active{border-color:var(--accent);background:var(--activebg);box-shadow:0 0 0 1px var(--accent) inset}
+.sec-head{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px}.badge{display:none;font-size:.75rem;font-weight:700;background:var(--accent);color:#10201c;border-radius:999px;padding:2px 10px}.sec.active .badge{display:inline-block}
+.exlist{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}.exlist button{text-align:left}.exlist .exwide{grid-column:span 2}
+#exPreview{margin:10px 0 0;background:#0f131b;border:1px solid var(--line);border-radius:8px;padding:10px;max-height:220px;overflow:auto;font:12.5px/1.6 ui-monospace,SFMono-Regular,Consolas,monospace;white-space:pre;color:var(--muted)}#exNote{margin:8px 0 0}
+#helpBtn,#copyToFree{width:100%;margin-top:10px}#message{margin-top:12px;white-space:pre-wrap;font-size:.88rem;color:var(--accent)}#message.error{color:var(--danger)}.stage{display:flex;flex-direction:column;gap:12px}.stats{display:flex;gap:8px;flex-wrap:wrap}.stat{background:var(--panel2);padding:8px 11px;border-radius:9px;color:var(--muted);font-size:.88rem}.stat strong{color:var(--text);font-variant-numeric:tabular-nums}.canvaswrap{background:#0b0e13;border:1px solid var(--line);border-radius:12px;overflow:hidden;min-height:360px;display:flex;align-items:center;justify-content:center}canvas{display:block;max-width:100%;max-height:70vh;image-rendering:pixelated}.legend{display:flex;gap:12px;align-items:center;flex-wrap:wrap;color:var(--muted);font-size:.88rem}.swatch{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:-2px;margin-right:5px}footer{padding:0 16px 18px;color:var(--pagemuted);font-size:.82rem;max-width:1700px;margin:auto}.small{font-size:.82rem;color:var(--muted)}
+dialog{background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:14px;width:calc(100% - 24px);max-width:760px;max-height:88vh;padding:0}dialog::backdrop{background:rgba(0,0,0,.6)}
+.dlg-head{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--panel)}.dlg-head h2{margin:0}.dlg-head button{padding:6px 12px}
+.dlg-body{padding:6px 18px 18px;overflow:auto;max-height:calc(88vh - 60px);font-size:.92rem}.dlg-body h3{font-size:.98rem;margin:18px 0 6px;color:var(--accent)}.dlg-body p{margin:4px 0}.dlg-body ul{margin:4px 0;padding-left:20px}
+.dlg-body pre{background:#0f131b;border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin:6px 0;overflow:auto;font:13px/1.6 ui-monospace,SFMono-Regular,Consolas,monospace;white-space:pre}.dlg-body code{color:var(--accent);font-family:ui-monospace,SFMono-Regular,Consolas,monospace}
+@media(max-width:900px){main{grid-template-columns:1fr;padding:10px}.canvaswrap{min-height:280px}header{padding:18px 14px}}
+</style>
+</head>
+<body>
+<header><h1>Cellular Automata Lab</h1><p>Create ant rules by combining color conditions, 8-neighbor detection, custom colors, and multi-cell movement.</p></header>
+<main>
+<section class="panel">
+<h2>1. Rule Editor</h2><div class="sub">Choose either the custom editor or an example. The mode currently used by the simulation is highlighted. Write one rule per line. If multiple rules match, only the first one is executed.</div>
+
+<div class="sec active" id="freeSec">
+<div class="sec-head"><h3>Custom rules</h3><span class="badge">Active</span></div>
+<textarea id="rules" spellcheck="false" aria-label="Rule language (DSL)"># setbg A : Initial state of the entire grid (defaults to A)
+# setstart B : State of the cell where the ant starts (defaults to the background state)
+setcolor A=#F0F2F5
+setcolor B=#252B38
+
+ant_cell_1=A -> left; paint_prev B
+ant_cell_1=B -> right; paint_prev A</textarea>
+<div class="buttons"><button id="apply" class="primary wide">Apply Custom Rules</button></div>
+<button id="helpBtn" type="button">Help</button>
+</div>
+
+<div class="sec" id="exSec">
+<div class="sec-head"><h3>Examples</h3><span class="badge">Active</span></div>
+<div class="exlist" id="exList"></div>
+<pre id="exPreview">Select an example to view its rules here.</pre>
+<p class="small" id="exNote"></p>
+<button id="copyToFree" type="button" disabled>Copy Example to Custom Rules</button>
+</div>
+
+<div id="message">Default rules are applied.</div>
+
+<h2 style="margin-top:18px">2. Simulation Settings</h2>
+<div class="row"><div><label for="width">Grid Width</label><input id="width" type="number" min="20" max="300" value="100"></div><div><label for="height">Grid Height</label><input id="height" type="number" min="20" max="300" value="100"></div></div>
+<div class="row"><div><label for="speed">Speed (steps/second)</label><input id="speed" type="number" min="1" max="10000" value="500"></div><div><label for="wrap">Boundary</label><select id="wrap"><option value="stop" selected>Stop at boundary</option><option value="wrap">Wrap around</option></select></div></div>
+<div class="row"><div><label for="direction">Initial Direction</label><select id="direction"><option value="N">North ↑</option><option value="E">East →</option><option value="S">South ↓</option><option value="W">West ←</option></select></div></div>
+<div class="row"><div><label for="bgColor">Page Background Color</label><input id="bgColor" type="color" value="#10131a"></div></div>
+<button id="bgReset" type="button" style="width:100%;margin-top:8px">Reset Page Background</button>
+<div class="buttons"><button id="step">Step Once</button><button id="step100">100 Steps</button><button id="reset">Reset</button><button id="run" class="primary wide">▶ Run</button></div>
+</section>
+<section class="stage"><div class="panel"><h2>Simulation View</h2><div class="stats"><div class="stat">Steps <strong id="steps">0</strong></div><div class="stat">Ant Position <strong id="pos">50, 50</strong></div><div class="stat">Direction <strong id="dir">↑ North</strong></div><div class="stat">States Used <strong id="colors">2</strong></div></div></div>
+<div class="canvaswrap"><canvas id="view" width="700" height="700" aria-label="Cellular automata grid"></canvas></div><div class="panel"><div id="legend" class="legend"></div><p class="small">The ant starts at the center of the grid. By default, it stops when it reaches an edge. The bright mint marker shows the ant’s position and direction.</p></div></section>
+</main>
+<footer>At each step, the ant checks its current cell and the eight surrounding cells, then executes the actions of the first matching rule in order. Rules are not checked again during movement. See the bottom of the source code for copyright information.</footer>
+
+<dialog id="helpDlg">
+<div class="dlg-head"><h2>Rule Reference</h2><button id="helpClose" type="button">Close</button></div>
+<div class="dlg-body">
+<h3>1. Cell Conditions (condition)</h3>
+<pre>ant_cell_(location)=(color)</pre>
+<ul><li><code>&amp;</code> to specify multiple conditions at once.</li>
+<li>If multiple rules match, only the first rule in the list is executed.</li></ul>
+
+<h3>2. Cell Locations (location)</h3>
+<p>Location numbers are fixed relative to the screen.</p>
+<pre>[2][3][4]
+[5][1][6]
+[8][7][9]</pre>
+
+<h3>3. Define Colors (color)</h3>
+<pre>setcolor (sign)=(Hex code)
+setcolor B=#0000FF</pre>
+<ul><li>(sign): a state symbol from A–Z</li>
+<li>(Hex code): a hexadecimal color code in #RRGGBB format</li></ul>
+
+<h3>4. Commands (order)</h3>
+<p><strong>(1) paint (color)</strong><br>Changes the cell where the ant ends up after movement to the specified state.</p>
+<p><strong>(2) paint_prev (color)</strong><br>Changes the cell where the ant was standing immediately before the most recent movement command.</p>
+<p><strong>(3) Basic Movement Commands</strong></p>
+<ul><li><code>straight</code>: Move forward one cell in the current direction</li>
+<li><code>right</code>: Turn 90° right, then move one cell</li>
+<li><code>left</code>: Turn 90° left, then move one cell</li>
+<li><code>flip</code>: Turn 180°, then move one cell</li></ul>
+<p><strong>(4) Multi-Cell Movement Commands</strong><br>Add <code>_n</code> to a movement command to specify the distance (e.g., <code>straight_2</code>, <code>left_3</code>)</p>
+<p><strong>(5) Chaining Commands</strong><br><code>;</code> to chain multiple commands in sequence.</p>
+
+<h3>5. Rule Syntax</h3>
+<pre>(condition) -> (order)</pre>
+
+<h3>6. Multi-Cell Movement and Execution Timing</h3>
+<ul><li>While a multi-cell movement command is running, rules are not checked on cells passed along the way.</li>
+<li>The next rule is checked at the destination after movement is complete.</li>
+<li>Therefore, no separate rules are executed on intermediate cells.</li><li>If a rule’s movement path crosses the boundary, the rule is not partially executed; the ant stops without applying movement or painting.</li></ul>
+
+<h3>7. Example</h3>
+<pre id="exampleCode">setcolor A=#FFFFFF
+setcolor B=#202040
+setcolor C=#00BFFF
+setcolor D=#FF00AA
+setcolor E=#FFD700
+
+ant_cell_1=A &amp; ant_cell_3=B -> right_2; paint_prev C
+ant_cell_1=A &amp; ant_cell_6=C -> left; paint_prev D
+ant_cell_1=A &amp; ant_cell_9=D -> flip; paint_prev E
+ant_cell_1=A -> straight; paint_prev B
+
+ant_cell_1=B &amp; ant_cell_3=C -> left_2; paint E
+ant_cell_1=B &amp; ant_cell_5=D -> right; paint C
+ant_cell_1=B -> straight; paint_prev A
+
+ant_cell_1=C &amp; ant_cell_7=E -> flip; paint_prev D
+ant_cell_1=C &amp; ant_cell_6=B -> right_2; paint A
+ant_cell_1=C -> left; paint_prev E
+
+ant_cell_1=D &amp; ant_cell_2=C -> straight_2; paint_prev B
+ant_cell_1=D &amp; ant_cell_4=E -> right; paint A
+ant_cell_1=D -> flip; paint_prev C
+
+ant_cell_1=E &amp; ant_cell_8=B -> left_2; paint_prev D
+ant_cell_1=E &amp; ant_cell_9=A -> straight; paint C
+ant_cell_1=E -> right; paint_prev B</pre>
+<h3>8. Background State (setbg)</h3>
+<pre>setbg (sign)
+setbg B</pre>
+<ul><li>Sets the initial state of every grid cell to (sign). Use it only once; if omitted, the default is A.</li>
+<li>Background cells are treated like any other cells, so rules for their state still apply. If the background is A, rules with an A condition can trigger.</li></ul>
+
+<h3>9. Ant Starting Cell State (setstart)</h3>
+<pre>setstart (sign)
+setstart C</pre>
+<ul><li>Sets the state of the cell where the ant starts to (sign). Use it only once; if omitted, it matches the background state.</li></ul>
+<button id="loadExample" type="button" class="primary">Load Section 7 Example</button>
+</div>
+</dialog>
+
+<script>
+(() => {
+'use strict';
+const $ = id => document.getElementById(id), canvas=$('view'), ctx=canvas.getContext('2d');
+const pixelCanvas=document.createElement('canvas'), pixelCtx=pixelCanvas.getContext('2d');
+let imageData=null, rgbCache={};
+const DIRS=[{x:0,y:-1,arrow:'↑ North'},{x:1,y:0,arrow:'→ East'},{x:0,y:1,arrow:'↓ South'},{x:-1,y:0,arrow:'← West'}];
+const SYMBOLS='ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+const DEFAULTS=['#F0F2F5','#252B38','#F2B84B','#8B7CF6','#E56C8A','#4AA8D8','#72C58B','#E58B50','#E5C7A9','#9ED7C7','#D7A8EF','#A8B8D8'];
+let antStart=null, bgState=0, rules=[], colorMap={}, colorNames=[], colorsUsed=2, grid=new Uint8Array(10000), w=100,h=100, ant={x:50,y:50,d:0}, previousCell={x:50,y:50}, steps=0, running=false, timer=null;
+
+// ---- Example list ----
+const EXAMPLES=[
+ {id:'langton',name:'Langton’s Ant',note:'The classic ant. A diagonal highway typically emerges after about 10,000 steps.',text:'setcolor A=#F0F2F5\nsetcolor B=#252B38\n\nant_cell_1=A -> left; paint_prev B\nant_cell_1=B -> right; paint_prev A'},
+ {id:'rlr',name:'RLR Ant',note:'A two-color ant with the turning directions reversed.',text:'setcolor A=#F0F2F5\nsetcolor B=#252B38\n\nant_cell_1=A -> right; paint_prev B\nant_cell_1=B -> left; paint_prev A'},
+ {id:'neighbor',name:'Neighbor Detection Example',note:'A three-color rule set that also checks the northern cell.',text:'setbg D\nsetcolor A=#FF0000\nsetcolor B=#252B38\nsetcolor C=#F2B84B\nsetcolor D=#000000\nsetstart A\nant_cell_1=A -> left; paint_prev B\nant_cell_1=B -> right; paint_prev C\nant_cell_1=C -> flip_2; paint_prev A\nant_cell_1=D -> right; paint_prev A'},
+ {id:'five',name:'Five-Color Example',note:'This is the example from the reference. With Stop at boundary, the ant stops when it reaches an edge; try Wrap around.',text:$('exampleCode').textContent},
+ {id:'tri',name:'9-Color Triangle Growth (Recommended)',wide:true,size:200,speed:3000,note:'An LRRRRRLLR ant. It spreads chaotically before growing into a large triangle. Automatically sets the grid to 200×200 and speed to 3000.',
+  text:['setcolor A=#0B0F1A','setcolor B=#1E3A8A','setcolor C=#2563EB','setcolor D=#06B6D4','setcolor E=#10B981','setcolor F=#FACC15','setcolor G=#F97316','setcolor H=#EF4444','setcolor I=#EC4899','',
+  '# LRRRRRLLR ant: turns according to each state and changes to the next color.',
+  'ant_cell_1=A -> left; paint_prev B','ant_cell_1=B -> right; paint_prev C','ant_cell_1=C -> right; paint_prev D','ant_cell_1=D -> right; paint_prev E','ant_cell_1=E -> right; paint_prev F','ant_cell_1=F -> right; paint_prev G','ant_cell_1=G -> left; paint_prev H','ant_cell_1=H -> left; paint_prev I','ant_cell_1=I -> right; paint_prev A'].join('\n')}
+];
+const exById=id=>EXAMPLES.find(e=>e.id===id);
+let curMode='free', curEx=null, lastEx=null;
+
+function textFor(mode,id){return mode==='free'?$('rules').value:exById(id).text}
+function updateSelectionUI(){
+ $('freeSec').classList.toggle('active',curMode==='free');
+ $('exSec').classList.toggle('active',curMode==='ex');
+ for(const b of $('exList').children)b.classList.toggle('active',curMode==='ex'&&b.dataset.id===curEx);
+ const e=lastEx?exById(lastEx):null;
+ $('exPreview').textContent=e?e.text:'Select an example to view its rules here.';
+ $('exNote').textContent=e?e.note:'';
+ $('copyToFree').disabled=!e;
+}
+function buildExampleList(){
+ const list=$('exList');
+ for(const e of EXAMPLES){const b=document.createElement('button');b.type='button';b.dataset.id=e.id;b.textContent=e.name;if(e.wide)b.className='exwide';b.addEventListener('click',()=>selectExample(e.id));list.append(b)}
+}
+function selectExample(id){
+ const e=exById(id);
+ if(e.size){$('width').value=e.size;$('height').value=e.size}
+ if(e.speed)$('speed').value=e.speed;
+ lastEx=id;
+ if(!applyRules('ex',id))updateSelectionUI();
+}
+
+function symbolId(s){s=String(s).toUpperCase();const i=s==='_'?-1:SYMBOLS.indexOf(s);if(i<0)throw new Error(`State symbol '${s}' is invalid. Use A–Z or 0–9.`);return i}
+function colorOf(id){return colorMap[id] || DEFAULTS[id%DEFAULTS.length]}
+function parseRules(text){
+ const parsed=[],custom={},used=new Set(),lines=text.split(/\r?\n/);let startState=null,bgSet=null;
+ for(let i=0;i<lines.length;i++){
+  let line=lines[i].trim();if(!line||line.startsWith('#')||line.startsWith('//'))continue;
+  const mb=line.match(/^setbg\s+([A-Za-z0-9])$/i);
+  if(mb){if(bgSet!==null)throw new Error(`Line ${i+1}: setbg is duplicated.`);bgSet=symbolId(mb[1]);used.add(bgSet);continue;}
+  const ms=line.match(/^setstart\s+([A-Za-z0-9])$/i);
+  if(ms){if(startState!==null)throw new Error(`Line ${i+1}: setstart is duplicated.`);startState=symbolId(ms[1]);used.add(startState);continue;}
+  if(/^(setbg|setstart)\b/i.test(line))throw new Error(`Line ${i+1}: '${line}' has invalid syntax. Examples: setbg A, setstart B (symbols must be A–Z or 0–9)`);
+  let m=line.match(/^setcolor\s+([A-Za-z0-9])\s*=\s*(#[0-9A-Fa-f]{6})$/i);
+  if(m){const id=symbolId(m[1]);if(custom[id])throw new Error(`Line ${i+1}: ${m[1].toUpperCase()} color is defined more than once.`);custom[id]=m[2].toUpperCase();used.add(id);continue;}
+  let left,right;const arrow=line.indexOf('->');if(arrow>=0){left=line.slice(0,arrow).trim();right=line.slice(arrow+2).trim()}else{
+   const semi=line.indexOf(';');if(semi<0)throw new Error(`Line ${i+1}: Put '->' between the condition and the action.`);left=line.slice(0,semi).trim();right=line.slice(semi+1).trim();
+  }
+  const condText=left.replace(/\s*&\s*/g,'&');const condParts=condText.split('&').map(s=>s.trim()).filter(Boolean);if(!condParts.length)throw new Error(`Line ${i+1}: The condition is empty.`);
+  const conditions=[];
+  for(const part of condParts){const c=part.match(/^ant_cell_([1-9])\s*=\s*([A-Za-z0-9])$/i);if(!c)throw new Error(`Line ${i+1}: Condition '${part}' has invalid syntax. Example: ant_cell_1=A`);const cell=Number(c[1]),state=symbolId(c[2]);conditions.push({cell,state});used.add(state);}
+  const conditionKey=conditions.map(c=>`${c.cell}:${c.state}`).sort().join('|');
+  if(parsed.some(r=>r.conditions.map(c=>`${c.cell}:${c.state}`).sort().join('|')===conditionKey))throw new Error(`Line ${i+1}: duplicates an existing rule condition (conditions are considered duplicates even if their order differs).`);
+  const actions=right.split(';').map(s=>s.trim()).filter(Boolean);if(!actions.length)throw new Error(`Line ${i+1}: No actions were specified.`);const acts=[];
+  for(const action of actions){let a;
+   if((a=action.match(/^(straight|left|right|flip)(?:_(\d+))?$/i))){const kind=a[1].toLowerCase(),distance=a[2]?Number(a[2]):1;if(!Number.isInteger(distance)||distance<1||distance>1000)throw new Error(`Line ${i+1}: Movement distance must be between 1 and 1000.`);acts.push({type:'travel',kind,distance});}
+   else if((a=action.match(/^paint\s+([A-Za-z0-9])$/i))){const state=symbolId(a[1]);used.add(state);acts.push({type:'paint',state});}
+   else if((a=action.match(/^paint_prev\s+([A-Za-z0-9])$/i))){const state=symbolId(a[1]);used.add(state);acts.push({type:'paintPrev',state});}
+   else throw new Error(`Line ${i+1}: Unknown action '${action}'. Check straight/left/right/flip[_n], paint, and paint_prev.`);
+  }
+  parsed.push({conditions,actions:acts,line:i+1});
+ }
+ if(!parsed.length)throw new Error('Enter at least one rule.');
+ for(const r of parsed)for(const c of r.conditions)if(c.cell===1)used.add(c.state);
+ used.add(bgSet===null?0:bgSet);
+ return {rules:parsed,custom,used:[...used].sort((a,b)=>a-b),start:startState,bg:bgSet};
+}
+function stop(){running=false;if(timer!==null){clearTimeout(timer);timer=null}$('run').textContent='▶ Run'}
+function applyRules(mode=curMode,id=curEx){
+ try{
+  const p=parseRules(textFor(mode,id));
+  stop();rules=p.rules;antStart=p.start;bgState=p.bg===null?0:p.bg;colorMap=p.custom;rgbCache={};colorNames=p.used;colorsUsed=colorNames.length;curMode=mode;curEx=id;
+  $('colors').textContent=String(colorsUsed);$('message').className='';
+  $('message').textContent=`${mode==='free'?'Custom rules':'Examples "'+exById(id).name+'"'} · ${rules.length} rules applied · ${colorsUsed} states used`+(antStart!==null?` · starting cell ${SYMBOLS[antStart]}`:'')+` · background ${SYMBOLS[bgState]}`;
+  updateSelectionUI();reset(false);renderLegend();return true;
+ }catch(e){$('message').className='error';$('message').textContent='Rule error: '+e.message;return false}
+}
+function reset(reparse=true){stop();if(reparse&&!applyRules())return;w=clamp(parseInt($('width').value)||100,20,300);h=clamp(parseInt($('height').value)||100,20,300);$('width').value=w;$('height').value=h;grid=new Uint8Array(w*h);grid.fill(bgState);const ds={N:0,E:1,S:2,W:3};ant={x:Math.floor(w/2),y:Math.floor(h/2),d:ds[$('direction').value]??0};if(antStart!==null)grid[ant.y*w+ant.x]=antStart;previousCell={x:ant.x,y:ant.y};steps=0;draw()}
+function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
+function neighborState(cellNo,snapshot){const offsets={1:[0,0],2:[-1,-1],3:[0,-1],4:[1,-1],5:[-1,0],6:[1,0],7:[0,1],8:[-1,1],9:[1,1]};const [dx,dy]=offsets[cellNo];let x=ant.x+dx,y=ant.y+dy;if($('wrap').value==='wrap'){x=(x+w)%w;y=(y+h)%h}else if(x<0||x>=w||y<0||y>=h)return -1;return snapshot[y*w+x]}
+function tick(){
+ const snapshot=grid.slice();let selected=null;
+ for(const rule of rules){let ok=true;for(const c of rule.conditions){if(neighborState(c.cell,snapshot)!==c.state){ok=false;break}}if(ok){selected=rule;break}}
+ if(!selected){stop();$('message').className='error';$('message').textContent=`Step ${steps}: No matching rule was found. Add conditions or check the rule order.`;return false}
+ // Simulate the full movement first to check for boundary collisions. On failure, do not partially change the state.
+ let tx=ant.x,ty=ant.y,td=ant.d;
+ for(const a of selected.actions){if(a.type!=='travel')continue;
+  if(a.kind==='left')td=(td+3)%4;else if(a.kind==='right')td=(td+1)%4;else if(a.kind==='flip')td=(td+2)%4;
+  for(let j=0;j<a.distance;j++){let nx=tx+DIRS[td].x,ny=ty+DIRS[td].y;
+   if($('wrap').value==='wrap'){nx=(nx+w)%w;ny=(ny+h)%h}
+   else if(nx<0||nx>=w||ny<0||ny>=h){stop();$('message').className='error';$('message').textContent='This rule was not executed because its movement path crosses the grid boundary. Enlarge the grid or set Boundary to "Wrap around".';draw();return false}
+   tx=nx;ty=ny;
+  }
+ }
+ let lastMoveStart={x:previousCell.x,y:previousCell.y};
+ for(const a of selected.actions){
+  if(a.type==='paint'){grid[ant.y*w+ant.x]=a.state;continue}
+  if(a.type==='paintPrev'){const p=lastMoveStart||previousCell;grid[p.y*w+p.x]=a.state;continue}
+  if(a.type==='travel'){
+   if(a.kind==='left')ant.d=(ant.d+3)%4;else if(a.kind==='right')ant.d=(ant.d+1)%4;else if(a.kind==='flip')ant.d=(ant.d+2)%4;
+   lastMoveStart={x:ant.x,y:ant.y};previousCell={x:ant.x,y:ant.y};
+   for(let j=0;j<a.distance;j++){let nx=ant.x+DIRS[ant.d].x,ny=ant.y+DIRS[ant.d].y;if($('wrap').value==='wrap'){nx=(nx+w)%w;ny=(ny+h)%h}ant.x=nx;ant.y=ny;}
+  }
+ }
+ steps++;return true;
+}
+function draw(){
+ const maxW=Math.max(260,canvas.parentElement.clientWidth-4),maxH=Math.max(260,window.innerHeight*.68),scale=Math.min(maxW/w,maxH/h,12),cw=Math.max(1,Math.floor(w*scale)),ch=Math.max(1,Math.floor(h*scale));
+ if(pixelCanvas.width!==w||pixelCanvas.height!==h){pixelCanvas.width=w;pixelCanvas.height=h;imageData=pixelCtx.createImageData(w,h)}
+ const data=imageData.data;
+ for(let i=0;i<grid.length;i++){const id=grid[i];let rgb=rgbCache[id];if(!rgb){const hex=colorOf(id);rgb=[parseInt(hex.slice(1,3),16),parseInt(hex.slice(3,5),16),parseInt(hex.slice(5,7),16)];rgbCache[id]=rgb}const k=i*4;data[k]=rgb[0];data[k+1]=rgb[1];data[k+2]=rgb[2];data[k+3]=255}
+ pixelCtx.putImageData(imageData,0,0);
+ if(canvas.width!==cw||canvas.height!==ch){canvas.width=cw;canvas.height=ch}ctx.imageSmoothingEnabled=false;ctx.clearRect(0,0,cw,ch);ctx.drawImage(pixelCanvas,0,0,cw,ch);
+ const sx=cw/w,sy=ch/h,ax=Math.floor(ant.x*sx),ay=Math.floor(ant.y*sy);ctx.fillStyle='#54e3bd';ctx.fillRect(ax,ay,Math.max(2,Math.ceil(sx)),Math.max(2,Math.ceil(sy)));ctx.strokeStyle='#10231f';ctx.lineWidth=Math.max(1,Math.min(3,sx*.22));ctx.beginPath();ctx.moveTo(ax+sx/2,ay+sy/2);const d=DIRS[ant.d];ctx.lineTo(ax+sx/2+d.x*sx*.32,ay+sy/2+d.y*sy*.32);ctx.stroke();$('steps').textContent=steps.toLocaleString();$('pos').textContent=`${ant.x}, ${ant.y}`;$('dir').textContent=DIRS[ant.d].arrow
+}
+function renderLegend(){const el=$('legend');el.replaceChildren();for(const id of colorNames){const span=document.createElement('span'),sw=document.createElement('i'),label=document.createElement('strong');sw.className='swatch';sw.style.backgroundColor=colorOf(id);label.textContent=SYMBOLS[id]+(id===bgState?' (background)':'');span.append(sw,label);el.append(span)}const antLabel=document.createElement('span');const sw=document.createElement('i');sw.className='swatch';sw.style.background='#54e3bd';antLabel.append(sw,document.createTextNode('Ant'));el.append(antLabel)}
+function loop(){if(!running)return;const speed=clamp(parseInt($('speed').value)||500,1,10000),count=Math.max(1,Math.ceil(speed/30));for(let i=0;i<count&&running;i++)if(!tick())break;draw();if(running)timer=setTimeout(loop,33)}
+
+// ---- Page background ----
+const BG_DEFAULT='#10131a';
+function applyBg(hex){
+ const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16),light=(0.299*r+0.587*g+0.114*b)/255>0.6,root=document.documentElement.style;
+ root.setProperty('--bg',hex);
+ root.setProperty('--pagetext',light?'#1a2030':'#edf2fb');
+ root.setProperty('--pagemuted',light?'#4a566b':'#aab5c8');
+ $('bgColor').value=hex;
+ try{localStorage.setItem('ca_bg',hex)}catch(e){}
+}
+$('bgColor').addEventListener('input',e=>applyBg(e.target.value));
+$('bgReset').addEventListener('click',()=>applyBg(BG_DEFAULT));
+try{const saved=localStorage.getItem('ca_bg');if(/^#[0-9a-fA-F]{6}$/.test(saved||''))applyBg(saved)}catch(e){}
+
+// ---- Event handlers ----
+buildExampleList();
+$('apply').addEventListener('click',()=>applyRules('free',null));
+$('copyToFree').addEventListener('click',()=>{if(!lastEx)return;$('rules').value=exById(lastEx).text;applyRules('free',null)});
+$('helpBtn').addEventListener('click',()=>$('helpDlg').showModal());$('helpClose').addEventListener('click',()=>$('helpDlg').close());$('helpDlg').addEventListener('click',e=>{if(e.target===$('helpDlg'))$('helpDlg').close()});$('loadExample').addEventListener('click',()=>{$('helpDlg').close();selectExample('five')});
+$('step').addEventListener('click',()=>{stop();if(tick())draw()});$('step100').addEventListener('click',()=>{stop();for(let i=0;i<100;i++)if(!tick())break;draw()});$('reset').addEventListener('click',()=>reset(true));$('run').addEventListener('click',()=>{if(running){stop();return}if(!rules.length&&!applyRules())return;running=true;$('run').textContent='Ⅱ Pause';loop()});['width','height','direction','wrap'].forEach(id=>$(id).addEventListener('change',()=>reset(true)));window.addEventListener('resize',draw);
+applyRules('free',null);
+})();
+</script>
+</body>
+</html>
+
+
+<!--
+# Cellular Automata Lab — License Terms
+
+**Copyright notice:** Copyright © 2026 [Author Name]  
+**Project name:** Cellular Automata Lab  
+**Original source:** [Public URL]  
+**License:** Cellular Automata Lab Non-Commercial License v1.0
+
+## Section 1 — Purpose and Scope
+
+These license terms govern use of the source code of “Cellular Automata Lab” and creative components for which the copyright holder has the right to grant permission.
+
+These terms apply only to the rights held by the copyright holder. Third-party works, external libraries, and materials subject to separate licenses may be governed by their own rights and license terms.
+
+## Section 2 — Permitted Uses
+
+You may use this work for non-commercial purposes if you comply with the following conditions:
+
+1. You may copy and distribute the program source code.
+2. You may modify the source code and distribute modified versions.
+3. You may use the program for personal learning, education, research, and non-commercial projects.
+4. You may provide the original program free of charge on non-commercial websites.
+
+## Section 3 — Attribution
+
+When distributing the original or a modified version, clearly state the following:
+
+1. Original program name: Cellular Automata Lab
+2. Original author: [Author Name]
+3. Original source: [Public URL]
+4. The name of these license terms and a link to them or their full text
+5. If modified, a statement that changes were made and a summary of the main changes
+
+You must not present a modified version in a way that confuses it with the original or implies that the original author officially approves or endorses it.
+
+## Section 4 — Distribution of Modified Versions
+
+When distributing a modified version, clearly identify the changes and include these license terms or other terms separately approved by the copyright holder.
+
+If a modified version includes a separate independent work, its rights and terms of use must be checked separately.
+
+## Section 5 — Commercial Use Restrictions
+
+Commercial use is not permitted under the permissions granted by this license.
+
+Commercial use may include selling for profit, offering the program for a fee, integrating it into a commercial service, or other use primarily intended to obtain commercial benefit or monetary compensation.
+
+You must obtain separate permission from the copyright holder before making commercial use. If it is unclear whether a use is commercial, ask the copyright holder before proceeding.
+
+## Section 6 — Rights and Responsibilities
+
+This license does not grant rights beyond those held by the copyright holder.
+
+The program is provided without express warranties. This clause does not exclude warranties or liabilities that cannot be excluded under applicable law.
+
+You must comply with applicable laws and third-party rights when using the program or distributing modified versions.
+
+## Section 7 — License Violations
+
+If you violate these terms, the copyright holder may seek cessation of use or other remedies for infringement under applicable law.
+
+## Section 8 — Use of AI Tools
+
+AI tools were used as assistants during the development of this project and improvement of its code.
+
+The project may include code and explanations suggested by AI tools. This notice does not claim that the copyright holder exclusively owns every AI-generated part. Rights to each part depend on actual creative contributions, applicable law, and third-party licenses.
+
+## Section 9 — Interpretation
+
+These terms are interpreted under the laws of the Republic of Korea. Any dispute will be resolved in accordance with applicable law.
+-->
